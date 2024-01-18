@@ -143,7 +143,10 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return 2;
+    int not_x_and_y = ~x & y;
+    int x_and_not_y = x & (~y);
+    // De Morgan's law
+    return ~(~not_x_and_y & ~x_and_not_y);
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -152,9 +155,7 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-
-  return 2;
-
+    return 0 | (1 << 31);
 }
 //2
 /*
