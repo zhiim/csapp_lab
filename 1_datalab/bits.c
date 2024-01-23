@@ -166,7 +166,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+    return !((x + 1) & x);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -177,7 +177,9 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+    int y = 0xAA + (0xAA << 8);
+    y = y + (y << 16);
+    return !((x&y)^y);
 }
 /* 
  * negate - return -x 
@@ -187,7 +189,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+    return ~x + 1;
 }
 //3
 /* 
@@ -200,7 +202,9 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+    int low = x + (~0x30 + 1);
+    int up = (~x + 1) + 0x39;
+    return !((low >> 31) | (up >> 31));
 }
 /* 
  * conditional - same as x ? y : z 
@@ -210,7 +214,10 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+    // if x is true, new value will be all 0,
+    // if x is false, new value will be all 1
+    x = ~(!x) + 1;
+    return (x&z) + (~x&y);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -220,7 +227,8 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+    int yMinusX = (~x + 1) + y;
+    return !(yMinusX >> 31);
 }
 //4
 /* 
@@ -232,7 +240,9 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+    // if x is 0, neg x will have the same signed bit as x
+    // or neg x will have a different signed bit as x
+    return (((~x + 1) | x) >> 31) + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -247,7 +257,27 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+    int bit_16, bit_8, bit_4, bit_2, bit_1, bit_0;
+    // if x is a negative number, flag will be 0xffffffff
+    // or flag will be 0
+    int flag = x >> 31;
+    // if x is a negative number, x will be ~x
+    // or x will be x
+	x = ((~flag) & x) | (flag & (~x));
+    // if there is 1 in upper 16bit, number of bits plus 16
+	bit_16 = (!!(x >> 16)) << 4;
+	x = x >> bit_16;
+	bit_8 = !!(x>>8)<<3;
+	x = x >> bit_8;
+  	bit_4 = !!(x >> 4) << 2;
+  	x = x >> bit_4;
+  	bit_2 = !!(x >> 2) << 1;
+  	x = x >> bit_2;
+  	bit_1 = !!(x >> 1);
+  	x = x >> bit_1;
+  	bit_0 = x;
+
+  	return bit_16 + bit_8 + bit_4 + bit_2 + bit_1 + bit_0 + 1;  // plus sign bit
 }
 //float
 /* 
